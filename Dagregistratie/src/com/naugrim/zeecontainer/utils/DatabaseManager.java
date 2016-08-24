@@ -1,14 +1,16 @@
 package com.naugrim.zeecontainer.utils;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Random;
 
+import com.mysql.jdbc.PreparedStatement;
 import com.naugrim.zeecontainer.frame.Dag;
 import com.naugrim.zeecontainer.frame.Person;
 
@@ -35,9 +37,6 @@ public class DatabaseManager {
 		}
 	}
 
-	/**
-	 * @param sql
-	 */
 	public Person[] request(String sql) throws Exception {
 		// TODO RETURN PERSON ARRAY. PROCESS THIS ARRAY IN CALLING FUNCTION
 		stmt = con.createStatement();
@@ -47,7 +46,6 @@ public class DatabaseManager {
 		// THIS ARRAY WILL HAVE TO BE FED INTO THE DATA AND THE TABLE
 		ArrayList<Person> plist = new ArrayList<>();
 		while (rs.next()) {
-			System.out.println("RS.NEXT()");
 			int DBID = rs.getInt("DatabaseID"); // hidden
 			int inschrijfnummer = rs.getInt("Inschrijfnummer"); // table
 			String voornaam = rs.getString("Voornaam"); // table
@@ -66,10 +64,11 @@ public class DatabaseManager {
 			int kinderen = rs.getInt("Kinderen"); // table
 			Dag dag = Dag.fromString(rs.getString("Winkeldag")); // table
 
-			plist.add(new Person(dag, voornaam, achternaam, adres, postcode, woonplaats, telefoonnummer, mail, instantie, contperInstantie, telefoonnummerContact, emailContact, DBID, inschrijfnummer, volwassenen, kinderen, reglement));
+			plist.add(new Person(dag, voornaam, achternaam, adres, postcode, woonplaats, telefoonnummer, mail,
+					instantie, contperInstantie, telefoonnummerContact, emailContact, DBID, inschrijfnummer,
+					volwassenen, kinderen, reglement));
 		}
-		System.out.println(rs.getRow());
-		System.out.println(rs.getFetchSize() + "/" + rs.getFetchDirection());
+		System.out.println(plist.size() + " row(s) returned");
 
 		Person[] parr = new Person[plist.size()];
 
@@ -83,56 +82,42 @@ public class DatabaseManager {
 		return parr;
 	}
 
-	public void SendPassword(String PW) {
-		String sql = "INSERT INTO `zeecontainer`.`password` (`hash`) VALUES ('" + PW.hashCode() + "');";
-
-		try {
-			stmt.execute(sql);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	private int getNextID() throws SQLException {
+		Statement st = con.createStatement();
+		ResultSet rs = st.executeQuery("SELECT MAX(idbezoeken) FROM bezoeken;");
+		
+		String lastid = "";
+		while(rs.next()){
+			lastid = rs.getString(1);
 		}
-
-	}
-
-	public void put(String table_name, Person[] Values) {
-		String sql = "";
-		for (int i = 0; i < Values.length; i++) {
-			sql = "INSERT INTO `zeecontainer`.`" + table_name + "` (`Voornaam`, `Achternaam`, `Dag`, " + "`Adres`, `Postcode`, `Woonplaats`) VALUES ('" + Values[i].voornaam + "', '" + Values[i].achternaam + "', '" + Values[i].dag.toString() + "', '" + Values[i].adres + "', ' " + Values[i].postcode + "', '" + Values[i].woonplaats + "');";
-			try {
-				stmt.execute(sql);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+		if(lastid == null){
+			lastid = "0";
 		}
+		return Integer.valueOf(lastid) + 1;
 	}
 
-	public int getNextID() {
-
-		return 1;
-	}
-
-	public void Delete(String string) throws Exception {
-		stmt = con.createStatement();
-		stmt.executeUpdate(string);
-	}
-
-	public int getPassword() {
+	public boolean logBezoek(int inschrijf, Date date) {
 		try {
-			stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM zeecontainer.password;");
-			int pwhash = 0;
 
-			while (rs.next()) {
-				pwhash = rs.getInt(2);
-			}
-
-			System.out.println(pwhash);
-			return pwhash;
-
+			Statement st = con.createStatement();
+			boolean rs = st.execute(
+					"INSERT INTO `zeecontainer`.`bezoeken` (`idbezoeken`, `Inschrijfnummer`, `Datum`) VALUES ('"
+							+ getNextID() + "', '" + inschrijf + "', '" + date + "');");
+			return true;
 		} catch (Exception e) {
-
+			e.printStackTrace();
+			return false;
 		}
-		return 0;
+	}
+
+	public Integer[] getBezoeken(java.sql.Date date) throws SQLException {
+		stmt = con.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT Inschrijfnummer FROM bezoeken WHERE Datum='" + date.toString() + "';");
+		ArrayList<Integer> l = new ArrayList<>();
+		while (rs.next()) {
+			l.add(rs.getInt("Inschrijfnummer"));
+		}
+		System.out.println(l.size() + " people already visited today");
+		return Arrays.copyOfRange(l.toArray(), 0, l.toArray().length, Integer[].class);
 	}
 }
