@@ -85,12 +85,12 @@ public class DatabaseManager {
 	private int getNextID() throws SQLException {
 		Statement st = con.createStatement();
 		ResultSet rs = st.executeQuery("SELECT MAX(idbezoeken) FROM bezoeken;");
-		
+
 		String lastid = "";
-		while(rs.next()){
+		while (rs.next()) {
 			lastid = rs.getString(1);
 		}
-		if(lastid == null){
+		if (lastid == null) {
 			lastid = "0";
 		}
 		return Integer.valueOf(lastid) + 1;
@@ -120,4 +120,66 @@ public class DatabaseManager {
 		System.out.println(l.size() + " people already visited today");
 		return Arrays.copyOfRange(l.toArray(), 0, l.toArray().length, Integer[].class);
 	}
+
+	public Person getPersonFromID(int ID) throws SQLException {
+		stmt = con.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * FROM zeecontainer.data WHERE Inschrijfnummer='" + ID + "';");
+		Person p = null;
+		while (rs.next()) {
+			int DBID = rs.getInt("DatabaseID"); // hidden
+			int inschrijfnummer = rs.getInt("Inschrijfnummer"); // table
+			String voornaam = rs.getString("Voornaam"); // table
+			String achternaam = rs.getString("Achternaam"); // table
+			boolean reglement = (rs.getInt("Reglementen") == 0) ? false : true; // table
+			String instantie = rs.getString("Instantie"); // details
+			String contperInstantie = rs.getString("ContactpersoonInstantie"); // details
+			String telefoonnummerContact = rs.getString("TelefoonnummerContact"); // details
+			String emailContact = rs.getString("EmailContact"); // details
+			String adres = rs.getString("Adres"); // table
+			String postcode = rs.getString("Postcode"); // table
+			String woonplaats = rs.getString("Woonplaats"); // table
+			String telefoonnummer = rs.getString("Telefoonnummer"); // table
+			String mail = rs.getString("Emailadres"); // table
+			int volwassenen = rs.getInt("Volwassenen"); // table
+			int kinderen = rs.getInt("Kinderen"); // table
+			Dag dag = Dag.fromString(rs.getString("Winkeldag")); // table
+
+			p = new Person(dag, voornaam, achternaam, adres, postcode, woonplaats, telefoonnummer, mail, instantie,
+					contperInstantie, telefoonnummerContact, emailContact, DBID, inschrijfnummer, volwassenen, kinderen,
+					reglement);
+		}
+		return p;
+
+	}
+
+	public Person[] getPersonOnDag(Dag dag) throws SQLException {
+		stmt = con.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * FROM zeecontainer.data WHERE Winkeldag='" + dag.toString() + "';");
+		ArrayList<Person> plist = new ArrayList<>();
+		while (rs.next()) {
+			int DBID = rs.getInt("DatabaseID"); // hidden
+			int inschrijfnummer = rs.getInt("Inschrijfnummer"); // table
+			String voornaam = rs.getString("Voornaam"); // table
+			String achternaam = rs.getString("Achternaam"); // table
+			boolean reglement = (rs.getInt("Reglementen") == 0) ? false : true; // table
+			String instantie = rs.getString("Instantie"); // details
+			String contperInstantie = rs.getString("ContactpersoonInstantie"); // details
+			String telefoonnummerContact = rs.getString("TelefoonnummerContact"); // details
+			String emailContact = rs.getString("EmailContact"); // details
+			String adres = rs.getString("Adres"); // table
+			String postcode = rs.getString("Postcode"); // table
+			String woonplaats = rs.getString("Woonplaats"); // table
+			String telefoonnummer = rs.getString("Telefoonnummer"); // table
+			String mail = rs.getString("Emailadres"); // table
+			int volwassenen = rs.getInt("Volwassenen"); // table
+			int kinderen = rs.getInt("Kinderen"); // table
+			Dag dag2 = Dag.fromString(rs.getString("Winkeldag")); // table
+
+			plist.add(new Person(dag2, voornaam, achternaam, adres, postcode, woonplaats, telefoonnummer, mail,
+					instantie, contperInstantie, telefoonnummerContact, emailContact, DBID, inschrijfnummer,
+					volwassenen, kinderen, reglement));
+		}
+		return Arrays.copyOfRange(plist.toArray(), 0, plist.size(), Person[].class);
+	}
+
 }
