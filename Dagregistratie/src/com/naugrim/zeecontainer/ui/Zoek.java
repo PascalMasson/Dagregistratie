@@ -42,7 +42,7 @@ public class Zoek extends JFrame implements DocumentListener {
 	private JTextField textField;
 
 	public Zoek() {
-		
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		instance = this;
 		model = new DefaultTableModel();
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

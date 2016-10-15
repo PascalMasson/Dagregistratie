@@ -59,8 +59,9 @@ public class Main extends JFrame {
 	// `Datum`) VALUES ('2', '50', '2014-05-26');
 
 	public Main() {
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		renderer = new CustomRenderer();
-		String host = "jdbc:mysql://192.168.178.28/zeecontainer";
+		String host = "jdbc:mysql://localhost/zeecontainer";
 
 		manager = new DatabaseManager(host, "java", "javapw");
 
